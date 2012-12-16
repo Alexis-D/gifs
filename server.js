@@ -67,9 +67,8 @@ app.post('/submit', function(req, res) {
     imgUrl += '.gif';
   }
 
-  // TODO(alexis): check if the domain of the url is imgur
   if(!_.contains(['i.imgur.com', 'imgur.com'], url.parse(imgUrl).hostname)) {
-      res.send(require('./templates/submit').render({
+      return res.send(require('./templates/submit').render({
         'invalid': true,
         'message': 'This was not a link to imgur.',
         'url': req.body.url,
@@ -87,13 +86,19 @@ app.post('/submit', function(req, res) {
 
           res.redirect('/gif/' + id);
 
-          // TODO(alexis): send all command at once.
-          // TODO(alexis): disallow user to vote for this gif.
-          client.setnx('gifs:' + id, imgUrl, redis.print);
-          client.setnx('gifs:' + id + ':ups', 1, redis.print);
-          client.setnx('gifs:' + id + ':downs', 0, redis.print);
-          client.sadd('gifs', id, redis.print)
-          scorer.score(id, 1, 0);
+          // TODO(alexis): disallow user to vote for this gif (check if already voted btw).
+          // (incr if already submitted but not voted by current user)
+          client.msetnx(
+            'gifs:' + id, imgUrl,
+            'gifs:' + id + ':ups', 1,
+            'gifs:' + id + ':downs', 0,
+            function(err, reply) {
+              if(!err) {
+                scorer.score(id);
+                client.sadd('gifs', id, redis.print);
+              }
+            }
+          )
       }
     }
 

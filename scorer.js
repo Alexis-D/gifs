@@ -21,15 +21,17 @@ var confidence = function(ups, downs) {
           ) / n)
         ) / (1 + z * z / n);
   },
-  _score = function(id) {
-    // update the score of the gif designated by id
-    client.get('gifs:' + id + ':ups', function(err, reply) {
-      if(!err && reply !== null) {
-        var ups = parseInt(reply, 10);
+  score = function(id) {
+    // silent if error ('cause it doesn't matter)...
 
-        client.get('gifs:' + id + ':downs', function(err, reply) {
+    // update the score of the gif designated by id
+    client.mget(
+        'gifs:' + id + ':ups',
+        'gifs:' + id + ':downs',
+        function(err, reply) {
           if(!err && reply !== null) {
-            var downs = parseInt(reply, 10);
+            var ups = reply[0],
+              downs = reply[1];
 
             client.set(
               'gifs:' + id + ':score',
@@ -37,25 +39,8 @@ var confidence = function(ups, downs) {
               redis.print
               );
           }
-        });
-      }
-    });
-  },
-  score = function(id, ups, downs) {
-    // silent if error ('cause it doesn't matter)...
-
-    // FIXME(alexis): this is a ugly kludge to go around async redis call
-    if(ups !== undefined && downs !== undefined) {
-      client.set(
-          'gifs:' + id + ':score',
-          confidence(ups, downs),
-          redis.print
-          );
-    }
-
-    else {
-      _score(id);
-    }
+        }
+        );
   };
 
 exports.score = score;
