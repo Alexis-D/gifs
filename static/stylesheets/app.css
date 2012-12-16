@@ -1,0 +1,17 @@
+/* TODO(alexis): use LESS */
+
+form.vote {
+    text-align: center;
+}
+
+#gif {
+    margin-bottom: 30px;
+}
+
+#gif img {
+    margin: auto;
+}
+
+nav a:hover {
+    color: #2ba6cb !important;
+}

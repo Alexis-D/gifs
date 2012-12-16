@@ -12,10 +12,11 @@ var app = express(),
   client = redis.createClient();
 
 _.map([
-    express.logger,
-    express.bodyParser,
-    express.compress,
-    ], function(middleware) { app.use(middleware()); });
+    express.bodyParser(),
+    express.compress(),
+    express.logger(),
+    express.static('static/'),
+    ], function(middleware) { app.use(middleware); });
 
 app.get('/', function(req, res) {
   // TODO(alexis): template this!
@@ -93,7 +94,10 @@ app.post('/submit', function(req, res) {
     }
 
     else {
-      res.send(require('./templates/submit.tpl').render({'invalid': true}));
+      res.send(require('./templates/submit.tpl').render({
+        'invalid': true,
+        'url': req.body.url,
+      }));
     }
   });
 });
@@ -105,6 +109,7 @@ app.get('/gif/:id', function(req, res) {
     if(err || reply === null) {
       res.status(404);
       res.send('404');
+      // check if just submitted?
     }
 
     else {
@@ -114,7 +119,13 @@ app.get('/gif/:id', function(req, res) {
 });
 
 app.get('/best', function(req, res) {
+  res.status(500);
+  res.send('/');
+});
 
+app.get('/about', function(req, res) {
+  res.status(500);
+  res.send('/');
 });
 
 app.listen(3333);
