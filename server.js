@@ -130,6 +130,7 @@ app.get('/gif/:id', function(req, res) {
 });
 
 app.get('/best', function(req, res) {
+  // TODO(alexis): use a sorted set (z*) to keep track of best gifs so far?
   res.status(500);
   res.send('/');
 });
