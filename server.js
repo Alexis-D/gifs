@@ -3,6 +3,7 @@ var crypto = require('crypto'),
   redis = require('redis'),
   request = require('request'),
   scorer = require('./scorer'),
+  url = require('url'),
   _ = require('underscore');
 
 require('jinjs').registerExtension('.tpl');
@@ -19,8 +20,6 @@ _.map([
     ], function(middleware) { app.use(middleware); });
 
 app.get('/', function(req, res) {
-  // TODO(alexis): template this!
-
   client.srandmember('gifs', function(err, reply) {
     if(err || reply === null) {
       res.status(500);
@@ -36,7 +35,7 @@ app.get('/', function(req, res) {
           res.send('wtf?!');
         }
 
-        res.send(require('./templates/index.tpl').render({
+        res.send(require('./templates/index').render({
           'url': reply,
           'id': id,
         }));
@@ -58,44 +57,50 @@ app.post('/vote', function(req, res) {
 });
 
 app.get('/submit', function(req, res) {
-  res.send(require('./templates/submit.tpl').render({}));
+  res.send(require('./templates/submit').render({}));
 });
 
 app.post('/submit', function(req, res) {
-  var url = req.body.url;
+  var imgUrl = req.body.url;
 
-  if(!_.str.endsWith(url.toLowerCase(), '.gif')) {
-    url += '.gif';
+  if(!_.str.endsWith(imgUrl.toLowerCase(), '.gif')) {
+    imgUrl += '.gif';
   }
 
   // TODO(alexis): check if the domain of the url is imgur
+  if(!_.contains(['i.imgur.com', 'imgur.com'], url.parse(imgUrl).hostname)) {
+      res.send(require('./templates/submit').render({
+        'invalid': true,
+        'message': 'This was not a link to imgur.',
+        'url': req.body.url,
+      }));
+  }
 
-  request(url, function(err, response, body) {
+  request(imgUrl, function(err, response, body) {
     if(!err && response.statusCode == 200) {
       if(_.str.startsWith(body, 'GIF87a')
         || _.str.startsWith(body, 'GIF89a')) {
           var sha1 = crypto.createHash('sha1');
-          sha1.update(url);
+          sha1.update(imgUrl);
 
           var id = sha1.digest('hex');
 
           res.redirect('/gif/' + id);
 
           // TODO(alexis): send all command at once.
-          // TODO(alexis): check if the gif is already in the DB,
-          // otherwise security hole (could reset up/down to 0).
           // TODO(alexis): disallow user to vote for this gif.
-          client.set('gifs:' + id, url, redis.print);
-          client.set('gifs:' + id + ':ups', 1, redis.print);
-          client.set('gifs:' + id + ':downs', 0, redis.print);
+          client.setnx('gifs:' + id, imgUrl, redis.print);
+          client.setnx('gifs:' + id + ':ups', 1, redis.print);
+          client.setnx('gifs:' + id + ':downs', 0, redis.print);
           client.sadd('gifs', id, redis.print)
           scorer.score(id, 1, 0);
       }
     }
 
     else {
-      res.send(require('./templates/submit.tpl').render({
+      res.send(require('./templates/submit').render({
         'invalid': true,
+        'message': 'Something weird happened, is imgur down?',
         'url': req.body.url,
       }));
     }
@@ -103,8 +108,6 @@ app.post('/submit', function(req, res) {
 });
 
 app.get('/gif/:id', function(req, res) {
-  // TODO(alexis): template this!
-
   client.get('gifs:' + req.params.id, function(err, reply) {
     if(err || reply === null) {
       res.status(404);
@@ -113,7 +116,10 @@ app.get('/gif/:id', function(req, res) {
     }
 
     else {
-      res.send(reply);
+      res.send(require('./templates/display').render({
+        'url': reply,
+        'id': req.params.id,
+      }));
     }
   });
 });

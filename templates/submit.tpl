@@ -5,7 +5,7 @@
         <div class="row">
             <div class="twelve columns">
                 <div class="alert alert-box">
-                    The url you submitted (<a href="{{ url }}">{{ url }}</a>) is not valid. Please try again.
+                    Oooh something bad happened with the URL you submitted (<a href="{{ url }}">{{ url }}</a>). The error says "{{ message }}".
                 </div>
             </div>
         </div>

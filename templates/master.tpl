@@ -4,7 +4,6 @@
         <meta charset="utf-8" />
         <link rel="stylesheet" href="/stylesheets/foundation.min.css" />
         <link rel="stylesheet" href="/stylesheets/general_foundicons.css" />
-        <link rel="stylesheet" href="/stylesheets/social_foundicons.css" />
         <link rel="stylesheet" href="/stylesheets/app.css" />
     </head>
 
