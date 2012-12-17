@@ -1,6 +1,6 @@
 // TODO(alexis): use RB tree AVL tree rather than BS tree.
 // TODO(alexis): concurrent access?
-// TODO(alexis): node deletion.
+// TODO(alexis): implement update.
 
 var _ = require('underscore');
 
@@ -65,7 +65,7 @@ Node.prototype.binarySearchTreeInsert = function(node) {
       }
     };
 
-  insert.call(this, node.value < this.value ? 'left' : 'right', node);
+  insert.call(this, node.name < this.name ? 'left' : 'right', node);
 };
 
 Node.prototype.fixSums = function(node, value) {
@@ -123,17 +123,17 @@ Node.prototype.toString = function() {
 // Quick hack to check distribution with python :)
 // Just :!node % | python3 in vim to see the magic.
 // var object = {
-//   'nine': 9,
-//   'six': 6,
-//   'three': 3,
-//   'nineteen': 19,
-//   'two': 2,
-//   'eleven': 11,
-//   'fourteen': 14,
-//   'seven': 7,
-//   'twelve': 12,
-//   'four': 4,
-//   'one': 1,
+//     'nine': 9,
+//     'six': 6,
+//     'three': 3,
+//     'nineteen': 19,
+//     'two': 2,
+//     'eleven': 11,
+//     'fourteen': 14,
+//     'seven': 7,
+//     'twelve': 12,
+//     'four': 4,
+//     'one': 1,
 //   },
 //   tree = (new BSTree()).fromObject(object);
 //
